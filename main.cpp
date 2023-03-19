@@ -1,67 +1,23 @@
 #include <iostream>
 #include <map>
+#include <cmath>
 #include "Rand.h"
 #include "Bonds.h"
 #include "Investments.h"
-#include <cmath>
+#include "Loan.h"
+#include "Institutions.h"
 
 #define dd_growth_func(x) std::sqrt(x)/10000
 #define marketing_fail_func(x) (1/(1+std::pow(M_E, (x/10000))))
-
-#define LINE endl << "---------------" << endl
+#define LINE std::endl << "---------------" << std::endl
 
 using namespace std;
 
-class FedInfo {
-public:
-    FedInfo() = default;
+auto market_data = MarketInfo();
+auto bank_data = BankInfo(market_data.reserve_ratio);
 
-    float reserve_ratio = (float)random() / 5;
-};
-
-class BankInfo {
-public:
-    explicit BankInfo(float reserve_ratio) {
-        demand_deposits = (float)normal_random(50000, 10000);
-        required_reserves = reserve_ratio * demand_deposits;
-        excess_reserves = demand_deposits - required_reserves;
-        marketing_funding = 0;
-        demand_deposits_growth_rate = 0;
-    }
-
-    float excess_reserves;
-    float required_reserves;
-    float marketing_funding;
-    float demand_deposits_growth_rate;
-    float demand_deposits;
-    vector<Investment> taken_investments;
-};
-
-auto fed_data = FedInfo();
-auto bank_data = BankInfo(fed_data.reserve_ratio);
-Bonds bond_data = Bonds();
-Investments investing_data = Investments();
 
 int month = 0;
-
-map<int, float> bond_returns = {{4,   normal_random(0.02, 0.003)},
-                                {12,  normal_random(0.018, 0.002)},
-                                {24,  normal_random(0.016, 0.002)},
-                                {60,  normal_random(0.0145, 0.0015)},
-                                {84,  normal_random(0.013, 0.01)},
-                                {120, normal_random(0.011, 0.01)},
-                                {240, normal_random(0.0099, 0.008)},
-                                {360, normal_random(0.009, 0.008)}};
-
-string get_bond_returns() {
-    string ret_str;
-    auto it = bond_returns.begin();
-    while (it != bond_returns.end()) {
-        ret_str += to_string(it->first) + " months: " + to_string(it->second * 100) + "% annually\n";
-        ++it;
-    }
-    return ret_str;
-}
 
 bool able_to_buy(float amount) {
     return bank_data.excess_reserves >= amount;
@@ -70,8 +26,8 @@ bool able_to_buy(float amount) {
 bool buy_treasuries() {
     cout << LINE << "Buying Treasuries: " << LINE
          << "Excess Reserves: " << bank_data.excess_reserves << endl
-         << bond_data.list_bonds() << endl
-         << "Accepted duration (months): " << bond_data.accepted_durations() << endl
+         << market_data.bonds.list_bonds() << endl
+         << "Accepted duration (months): " << market_data.bonds.accepted_durations() << endl
          << "Amount to purchase: $";
 
     float amountToBuy;
@@ -84,7 +40,7 @@ bool buy_treasuries() {
     cout << endl;
 
 
-    if (!bond_data.is_accepted_duration(durationToBuy)) {
+    if (!market_data.bonds.is_accepted_duration(durationToBuy)) {
         cout << "Unavailable duration." << endl;
         return false;
     }
@@ -96,50 +52,51 @@ bool buy_treasuries() {
 
     bank_data.excess_reserves -= amountToBuy;
 
-    bond_data.new_bond(durationToBuy, amountToBuy, bond_returns[durationToBuy]);
+    market_data.bonds.new_bond(durationToBuy, amountToBuy, market_data.bond_returns[durationToBuy]);
 
-    cout << bond_data.list_bonds();
+    cout << market_data.bonds.list_bonds();
 
     return true;
 }
 
 bool sell_treasuries() {
-    cout << LINE << "Selling Treasuries:" << LINE << bond_data.list_bonds() << "Sell treasury #: ";
+    cout << LINE << "Selling Treasuries:" << LINE << market_data.bonds.list_bonds() << "Sell treasury #: ";
 
     int bondToSell;
     cin >> bondToSell;
     cout << endl;
 
-    if (!bond_data.is_active_bond(bondToSell)) {
+    if (!market_data.bonds.is_active_bond(bondToSell)) {
         cout << "Unable to sell treasury." << endl;
         return false;
     }
 
-    bank_data.excess_reserves += bond_data.sell_bond(bondToSell,
-                                                     bond_returns[(int) bond_data.get_bond(bondToSell)[0]]);
+    bank_data.excess_reserves += market_data.bonds.sell_bond(bondToSell,
+                                                             market_data.bond_returns[(int) market_data.bonds.get_bond(
+                                                                     bondToSell)[0]]);
     return true;
 }
 
 bool analyze_investments() {
     cout << LINE << "Investment Initiatives: " << LINE;
-    cout << "Investments generally have higher yields, but are riskier compared to treasuries." << endl
-    << "As your bank grows, it will have access to better and better investments." << endl;
+    cout << "InvestmentGen generally have higher yields, but are riskier compared to treasuries." << endl
+         << "As your bank grows, it will have access to better and better investments." << endl;
 
-    cout << investing_data.get_options();
+    cout << market_data.investments.get_options();
 
     cout << "Option #";
     int selection;
     cin >> selection;
     cout << endl;
 
-    Investment chosen_investment = investing_data.get_option(selection);
+    Investment chosen_investment = market_data.investments.get_option(selection);
 
-    if(chosen_investment.principal > bank_data.excess_reserves){
+    if (chosen_investment.principal > bank_data.excess_reserves) {
         cout << "You have insufficient funds to take this investment." << endl;
         return false;
     }
 
-    if(!chosen_investment.investment_succeeded()) {
+    if (!chosen_investment.investment_succeeded()) {
         cout << "Investment failed. You have lost your principal." << endl;
         return true;
     }
@@ -170,7 +127,7 @@ bool marketing() {
     }
     bank_data.excess_reserves -= amountToSpend;
 
-    if(random() < marketing_fail_func(amountToSpend)){
+    if (random() < marketing_fail_func(amountToSpend)) {
         cout << "Your marketing initiative has failed, resulting in no increase in demand deposits" << endl;
         cout << " As you spend more, the chance of these failures decreases." << endl;
         return true;
@@ -179,6 +136,11 @@ bool marketing() {
     bank_data.marketing_funding += amountToSpend;
 
     return true;
+}
+
+bool take_loan() {
+    cout << LINE << "Take a Loan: " << LINE;
+
 }
 
 int main() {
@@ -202,6 +164,7 @@ int main() {
         switch (selection) {
             case 1: {
                 month++;
+                market_data.investments.new_options();
 
                 cout << "A month has passed. Current month: " << month << endl;
 
@@ -217,21 +180,22 @@ int main() {
                      << after_dd - before_dd << endl;
 
                 float before_req = bank_data.required_reserves;
-                bank_data.required_reserves =  fed_data.reserve_ratio * bank_data.demand_deposits;
+                bank_data.required_reserves = market_data.reserve_ratio * bank_data.demand_deposits;
                 float after_req = bank_data.required_reserves;
                 float before_ex = bank_data.excess_reserves;
                 // Update bond coupons and principals
-                bank_data.excess_reserves += bond_data.get_earnings();
+                bank_data.excess_reserves += market_data.bonds.get_earnings();
                 bank_data.excess_reserves += (after_dd - before_dd) - (after_req - before_req);
 
-                // Investments
-                for(auto& item: bank_data.taken_investments)
+                // InvestmentGen
+                for (auto &item: bank_data.taken_investments)
                     bank_data.excess_reserves += item.return_per_month;
                 float after_ex = bank_data.excess_reserves;
 
                 cout << "Excess reserves changed from $" << before_ex << " to $" << after_ex << " with a change of $"
                      << after_ex - before_ex << endl;
-                cout << "Required reserves changed from $" << before_req << " to $" << after_req << " with a change of $"
+                cout << "Required reserves changed from $" << before_req << " to $" << after_req
+                     << " with a change of $"
                      << after_req - before_req << endl << endl;
 
                 bank_data.marketing_funding = 0;
@@ -256,12 +220,13 @@ int main() {
                      << "Excess Reserves: $" << bank_data.excess_reserves << endl
                      << "Required Reserves: $" << bank_data.required_reserves << endl
                      << "Demand Deposits: $" << bank_data.demand_deposits << endl
-                     << bond_data.list_bonds();
+                     << market_data.bonds.list_bonds() << endl
+                     << bank_data.list_investments();
 
 
                 cout << LINE << "Market Statement: " << LINE
-                     << "Reserve ratio: " << fed_data.reserve_ratio * 100 << "%" << endl
-                     << "Bond returns, yearly:\n" << get_bond_returns() << endl;
+                     << "Reserve ratio: " << market_data.reserve_ratio * 100 << "%" << endl
+                     << "Bond returns, yearly:\n" << market_data.get_bond_data() << endl;
                 break;
             case 8:
                 done = true;

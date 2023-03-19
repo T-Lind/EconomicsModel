@@ -35,11 +35,13 @@ private:
     float risk;
 };
 
-class Investments {
+class InvestmentGen {
 public:
-    Investments() = default;
+    InvestmentGen() {
+        new_options();
+    }
 
-    std::string get_options(){
+    void new_options(){
         current_options.clear();
         current_options.emplace_back(0.05, 0.03);
         current_options.emplace_back(0.05, 0.07);
@@ -48,7 +50,9 @@ public:
         current_options.emplace_back(0.15, 0.1);
         current_options.emplace_back(0.20, 0.1);
         current_options.emplace_back(0.25, 0.2);
+    }
 
+    std::string get_options(){
         std::string ret_str = "Current Opportunities: \n";
         int i=0;
         for(auto& item: current_options){
