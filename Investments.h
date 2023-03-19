@@ -13,7 +13,7 @@ class Investment {
 public:
     Investment(float mu_rate, float sigma_rate) {
         annual_return = (float) normal_random(mu_rate, sigma_rate);
-        principal = (float) random(10000, 10000000);
+        principal = (float) random(10000, 100000);
         risk = (float) std::max(0.0, risk_func(annual_return - principal / 50000000));
         return_per_month = principal * annual_return / 12;
     }
@@ -24,16 +24,15 @@ public:
 
     [[nodiscard]] std::string investment_info() const {
         return
-                "Investment: $" + std::to_string(principal) + " down for a " + std::to_string(return_per_month * 100) +
+                "Investment: $" + std::to_string(principal) + " down for a " + std::to_string(annual_return * 100) +
                 "% annual rate and " + std::to_string(risk * 100) + "% chance of failure.\n";
     }
 
     float return_per_month;
-private:
     float annual_return;
     float principal;
+private:
     float risk;
-    std::string name;
 };
 
 class Investments {
@@ -50,7 +49,7 @@ public:
         current_options.emplace_back(0.20, 0.1);
         current_options.emplace_back(0.25, 0.2);
 
-        std::string ret_str = "Investment Opportunities: \n";
+        std::string ret_str = "Current Opportunities: \n";
         int i=0;
         for(auto& item: current_options){
             ret_str += std::to_string(i)+"> "+item.investment_info();
