@@ -19,11 +19,11 @@ public:
         return true;
     }
 
-    float sell_bond(int i, float percent_original_value) {
+    float sell_bond(int i, float current_rate) {
         if (bond_data[i][1] == 0 && bond_data[i][2] == 0) {
             return 0;
         }
-        float value_sold = percent_original_value * bond_data[i][1];
+        float value_sold = bond_data[i][2] / current_rate * bond_data[i][1];
         bond_data[i][1] = 0;
         bond_data[i][2] = 0;
         return value_sold;
