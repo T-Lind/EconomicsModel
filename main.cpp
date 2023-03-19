@@ -4,7 +4,8 @@
 #include "Bonds.h"
 #include <cmath>
 
-#define growth_rate_func(x) std::sqrt(x)/10000
+#define dd_growth_func(x) std::sqrt(x)/10000
+#define marketing_fail_func(x) (1/(1+std::pow(M_E, (x/10000))))
 
 using namespace std;
 
@@ -115,7 +116,9 @@ bool sell_treasuries() {
 }
 
 bool analyze_investments() {
-
+    cout << "Investment Initiatives: " << endl;
+    cout << "Investments generally have higher yields, but are riskier compared to treasuries." << endl
+    << "As your bank grows, it will have access to better and better investments." << endl;
 }
 
 bool marketing() {
@@ -137,9 +140,15 @@ bool marketing() {
         cout << "Cannot spend an invalid amount on marketing." << endl;
         return false;
     }
+    bank_data.excess_reserves -= amountToSpend;
+
+    if(random() < marketing_fail_func(amountToSpend)){
+        cout << "Your marketing initiative has failed, resulting in no increase in demand deposits" << endl;
+        cout << " As you spend more, the chance of these failures decreases." << endl;
+        return true;
+    }
 
     bank_data.marketing_funding += amountToSpend;
-    bank_data.excess_reserves -= amountToSpend;
 
     return true;
 }
@@ -153,7 +162,7 @@ int main() {
         cout << "3. Sell Treasuries" << endl;
         cout << "4. Analyze Investments" << endl;
         cout << "5. Marketing/Advertising" << endl;
-        cout << "6. " << endl;
+        cout << "6. " << endl; // Take out loans from other banks
         cout << "7. Bank Statement" << endl;
         cout << "8. Exit\n\nSelection: ";
 
@@ -170,10 +179,11 @@ int main() {
 
 
                 // Increase / Decrease demand deposits due to marketing
-                bank_data.demand_deposits_growth_rate += growth_rate_func(bank_data.marketing_funding);
+                bank_data.demand_deposits_growth_rate += dd_growth_func(bank_data.marketing_funding);
                 float before_dd = bank_data.demand_deposits;
                 bank_data.demand_deposits *= (1 + bank_data.demand_deposits_growth_rate);
                 bank_data.demand_deposits_growth_rate = min(bank_data.demand_deposits_growth_rate, 0.8f);
+                bank_data.demand_deposits = min(bank_data.demand_deposits, 1000000000.f);
                 float after_dd = bank_data.demand_deposits;
                 cout << "Demand deposits grew from $" << before_dd << " to $" << after_dd << " with a change of $"
                      << after_dd - before_dd << endl;

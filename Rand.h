@@ -1,17 +1,22 @@
 #include <iostream>
 #include <string>
 #include <random>
-//
-// Created by zenith on 3/17/2023.
-//
 
 #ifndef ECONOMICSMODEL_RAND_H
 #define ECONOMICSMODEL_RAND_H
 
 double random(){
-    using namespace std;
-    srand(time(nullptr));
-    return static_cast<double>(rand())/RAND_MAX;
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<> dis(0, 1);
+    return dis(gen);
+}
+
+double random(double low, double high){
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<> dis(low, high);
+    return dis(gen);
 }
 
 double normal_random(double mu, double sigma){
