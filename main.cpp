@@ -4,12 +4,12 @@
 #include "Rand.h"
 #include "Bonds.h"
 #include "Investments.h"
-#include "Loan.h"
 #include "Institutions.h"
 
 #define dd_growth_func(x) std::sqrt(x)/10000
 #define marketing_fail_func(x) (1/(1+std::pow(M_E, (x/10000))))
 #define LINE std::endl << "---------------" << std::endl
+#define invalid_sel(value, size) if(value < 0 || value >= size){ std::cout << "Invalid selection specified." << endl; return false; }
 
 using namespace std;
 
@@ -45,7 +45,7 @@ bool buy_treasuries() {
         return false;
     }
 
-    if (!able_to_buy(amountToBuy) && amountToBuy >= 0) {
+    if (!able_to_buy(amountToBuy) || amountToBuy < 0) {
         cout << "Insufficient funds to purchase!" << endl;
         return false;
     }
@@ -66,6 +66,8 @@ bool sell_treasuries() {
     cin >> bondToSell;
     cout << endl;
 
+    invalid_sel(bondToSell, market_data.bonds.bond_data.size());
+
     if (!market_data.bonds.is_active_bond(bondToSell)) {
         cout << "Unable to sell treasury." << endl;
         return false;
@@ -79,7 +81,7 @@ bool sell_treasuries() {
 
 bool analyze_investments() {
     cout << LINE << "Investment Initiatives: " << LINE;
-    cout << "InvestmentGen generally have higher yields, but are riskier compared to treasuries." << endl
+    cout << "Investments generally have higher yields, but are riskier compared to treasuries." << endl
          << "As your bank grows, it will have access to better and better investments." << endl;
 
     cout << market_data.investments.get_options();
@@ -88,6 +90,9 @@ bool analyze_investments() {
     int selection;
     cin >> selection;
     cout << endl;
+
+    invalid_sel(selection, market_data.investments.current_options.size());
+
 
     Investment chosen_investment = market_data.investments.get_option(selection);
 
@@ -141,6 +146,32 @@ bool marketing() {
 bool take_loan() {
     cout << LINE << "Take a Loan: " << LINE;
 
+    cout << "Amount to loan: $";
+    float loan_amount;
+    cin >> loan_amount;
+    cout << endl;
+
+    cout << "Excess reserves: $" << bank_data.excess_reserves << endl;
+
+
+    cout << "Loan options:" << endl;
+    market_data.loans.update_loans(loan_amount, bank_data.excess_reserves, bank_data.demand_deposits, bank_data.demand_deposits_growth_rate);
+    cout << market_data.loans.list_loans();
+
+    cout << "Option #";
+    int selection;
+    cin >> selection;
+    cout << endl;
+
+    if(selection < 0 || selection >= market_data.loans.available_loans.size()){
+        cout << "Invalid selection specified." << endl;
+        return false;
+    }
+
+    bank_data.taken_loans.push_back(market_data.loans.available_loans[selection]);
+
+    bank_data.excess_reserves += loan_amount;
+    return true;
 }
 
 int main() {
@@ -187,9 +218,14 @@ int main() {
                 bank_data.excess_reserves += market_data.bonds.get_earnings();
                 bank_data.excess_reserves += (after_dd - before_dd) - (after_req - before_req);
 
-                // InvestmentGen
+                // Investments
                 for (auto &item: bank_data.taken_investments)
                     bank_data.excess_reserves += item.return_per_month;
+
+                // Loans
+                for (auto& item: bank_data.taken_loans)
+                    bank_data.excess_reserves -= item.get_payment();
+
                 float after_ex = bank_data.excess_reserves;
 
                 cout << "Excess reserves changed from $" << before_ex << " to $" << after_ex << " with a change of $"
@@ -214,6 +250,7 @@ int main() {
                 marketing();
                 break;
             case 6:
+                take_loan();
                 break;
             case 7:
                 cout << LINE << "Bank Financial Statement: " << LINE
@@ -221,7 +258,8 @@ int main() {
                      << "Required Reserves: $" << bank_data.required_reserves << endl
                      << "Demand Deposits: $" << bank_data.demand_deposits << endl
                      << market_data.bonds.list_bonds() << endl
-                     << bank_data.list_investments();
+                     << bank_data.list_investments() << endl
+                     << "Current Loans: " << endl << bank_data.list_loans();
 
 
                 cout << LINE << "Market Statement: " << LINE

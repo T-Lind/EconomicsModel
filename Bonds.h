@@ -78,9 +78,9 @@ public:
     }
 
     std::vector<int> acceptedDurations = {4, 12, 24, 60, 84, 120, 240, 360};
+    std::vector<std::vector<float>> bond_data;
 private:
     int month = 0;
-    std::vector<std::vector<float>> bond_data;
 };
 
 #endif //ECONOMICSMODEL_BONDS_H

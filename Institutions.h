@@ -3,8 +3,8 @@
 #include <string>
 #include <vector>
 #include "Investments.h"
-#include "Loan.h"
 #include "Bonds.h"
+#include "Loan.h"
 
 using namespace std;
 
@@ -15,7 +15,7 @@ class MarketInfo {
 public:
     MarketInfo() = default;
 
-    float reserve_ratio = (float)random() / 5;
+    float reserve_ratio = (float) random() / 5;
 
     map<int, float> bond_returns = {{4,   normal_random(0.02, 0.003)},
                                     {12,  normal_random(0.018, 0.002)},
@@ -29,7 +29,7 @@ public:
 
     Bonds bonds = Bonds();
     InvestmentGen investments = InvestmentGen();
-
+    LoanGen loans = LoanGen();
 
     string get_bond_data() {
         string ret_str;
@@ -45,18 +45,18 @@ public:
 class BankInfo {
 public:
     explicit BankInfo(float reserve_ratio) {
-        demand_deposits = (float)normal_random(50000, 10000);
+        demand_deposits = (float) normal_random(50000, 10000);
         required_reserves = reserve_ratio * demand_deposits;
         excess_reserves = demand_deposits - required_reserves;
         marketing_funding = 0;
         demand_deposits_growth_rate = 0;
     }
 
-    string list_investments(){
+    string list_investments() {
         std::string ret_str = "Current Investments: \n";
-        int i=0;
-        for(auto& item: taken_investments){
-            ret_str += std::to_string(i)+"> "+item.investment_info();
+        int i = 0;
+        for (auto &item: taken_investments) {
+            ret_str += std::to_string(i) + "> " + item.investment_info();
             i++;
         }
         return ret_str;
@@ -68,7 +68,18 @@ public:
     float demand_deposits_growth_rate;
     float demand_deposits;
     vector<Investment> taken_investments;
+    vector<Loan> taken_loans;
 
+    string list_loans() {
+        string ret_str;
+        int i = 0;
+        for (auto &item: taken_loans) {
+            if(item.monthly_payment != 0)
+                ret_str += to_string(i)+"> "+item.bought_info()+"\n";
+            i++;
+        }
+        return ret_str;
+    }
 };
 
 #endif //ECONOMICSMODEL_INSTITUTIONS_H

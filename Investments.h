@@ -64,7 +64,6 @@ public:
     Investment get_option(int option_num){
         return current_options[option_num];
     }
-private:
     std::vector<Investment> current_options;
 };
 
