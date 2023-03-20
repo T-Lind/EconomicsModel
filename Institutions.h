@@ -15,9 +15,9 @@ class MarketInfo {
 public:
     MarketInfo() = default;
 
-    float reserve_ratio = (float) random() / 5;
+    double reserve_ratio = (double) random() / 5;
 
-    map<int, float> bond_returns = {{4,   normal_random(0.02, 0.003)},
+    map<int, double> bond_returns = {{4,   normal_random(0.02, 0.003)},
                                     {12,  normal_random(0.018, 0.002)},
                                     {24,  normal_random(0.016, 0.002)},
                                     {60,  normal_random(0.0145, 0.0015)},
@@ -44,8 +44,8 @@ public:
 
 class BankInfo {
 public:
-    explicit BankInfo(float reserve_ratio) {
-        demand_deposits = (float) normal_random(50000, 10000);
+    explicit BankInfo(double reserve_ratio) {
+        demand_deposits = (double) normal_random(50000, 10000);
         required_reserves = reserve_ratio * demand_deposits;
         excess_reserves = demand_deposits - required_reserves;
         marketing_funding = 0;
@@ -62,11 +62,11 @@ public:
         return ret_str;
     }
 
-    float excess_reserves;
-    float required_reserves;
-    float marketing_funding;
-    float demand_deposits_growth_rate;
-    float demand_deposits;
+    double excess_reserves;
+    double required_reserves;
+    double marketing_funding;
+    double demand_deposits_growth_rate;
+    double demand_deposits;
     vector<Investment> taken_investments;
     vector<Loan> taken_loans;
 

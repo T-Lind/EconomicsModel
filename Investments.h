@@ -4,6 +4,7 @@
 #include "Rand.h"
 #include <cmath>
 #include <iostream>
+
 #ifndef ECONOMICSMODEL_INVESTMENTS_H
 #define ECONOMICSMODEL_INVESTMENTS_H
 
@@ -11,10 +12,10 @@
 
 class Investment {
 public:
-    Investment(float mu_rate, float sigma_rate) {
-        annual_return = (float) normal_random(mu_rate, sigma_rate);
-        principal = (float) random(10000, 100000);
-        risk = (float) std::max(0.0, risk_func(annual_return - principal / 50000000));
+    Investment(double mu_rate, double sigma_rate) {
+        annual_return = (double) normal_random(mu_rate, sigma_rate);
+        principal = (double) random(10000, 100000);
+        risk = (double) std::max(0.0, risk_func(annual_return - principal / 50000000));
         return_per_month = principal * annual_return / 12;
     }
 
@@ -25,14 +26,15 @@ public:
     [[nodiscard]] std::string investment_info() const {
         return
                 "Investment: $" + std::to_string(principal) + " down; " + std::to_string(annual_return * 100) +
-                "% annual rate; " + std::to_string(risk * 100) + "% fail chance, monthly return: "+std::to_string(return_per_month)+"\n";
+                "% annual rate; " + std::to_string(risk * 100) + "% fail chance, monthly return: " +
+                std::to_string(return_per_month) + "\n";
     }
 
-    float return_per_month;
-    float annual_return;
-    float principal;
+    double return_per_month;
+    double annual_return;
+    double principal;
 private:
-    float risk;
+    double risk;
 };
 
 class InvestmentGen {

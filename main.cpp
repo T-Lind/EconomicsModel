@@ -6,7 +6,7 @@
 #include "Investments.h"
 #include "Institutions.h"
 
-#define dd_growth_func(x) std::sqrt(x)/10000
+#define dd_growth_func(x) std::min(std::sqrt(x)/100000, 0.1)
 #define marketing_fail_func(x) (1/(1+std::pow(M_E, (x/10000))))
 #define LINE std::endl << "---------------" << std::endl
 #define invalid_sel(value, size) if(value < 0 || value >= size){ std::cout << "Invalid selection specified." << endl; return false; }
@@ -19,7 +19,7 @@ auto bank_data = BankInfo(market_data.reserve_ratio);
 
 int month = 0;
 
-bool able_to_buy(float amount) {
+bool able_to_buy(double amount) {
     return bank_data.excess_reserves >= amount;
 }
 
@@ -30,7 +30,7 @@ bool buy_treasuries() {
          << "Accepted duration (months): " << market_data.bonds.accepted_durations() << endl
          << "Amount to purchase: $";
 
-    float amountToBuy;
+    double amountToBuy;
     cin >> amountToBuy;
     cout << endl;
 
@@ -125,7 +125,7 @@ bool marketing() {
     cout << "Excess reserves: $" << bank_data.excess_reserves << endl;
 
     cout << "Additional spending: $";
-    float amountToSpend;
+    double amountToSpend;
     cin >> amountToSpend;
     cout << endl;
 
@@ -151,9 +151,14 @@ bool take_loan() {
 
     cout << "Excess reserves: $" << bank_data.excess_reserves << endl;
     cout << "Amount to loan: $";
-    float loan_amount;
+    double loan_amount;
     cin >> loan_amount;
     cout << endl;
+
+    if(loan_amount <= 0) {
+        cout << "Cannot buy a loan <= 0." << endl;
+        return false;
+    }
 
 
     cout << "Loan options:" << endl;
@@ -204,19 +209,20 @@ int main() {
 
 
                 // Increase / Decrease demand deposits due to marketing
-                bank_data.demand_deposits_growth_rate += dd_growth_func(bank_data.marketing_funding);
-                float before_dd = bank_data.demand_deposits;
+                bank_data.demand_deposits_growth_rate +=
+                        dd_growth_func(bank_data.marketing_funding);
+                bank_data.demand_deposits_growth_rate *= normal_random(0.8, 0.1);
+                double before_dd = bank_data.demand_deposits;
                 bank_data.demand_deposits *= (1 + bank_data.demand_deposits_growth_rate);
-                bank_data.demand_deposits_growth_rate = min(bank_data.demand_deposits_growth_rate, 0.8f);
-                bank_data.demand_deposits = min(bank_data.demand_deposits, 1000000000.f);
-                float after_dd = bank_data.demand_deposits;
+                bank_data.demand_deposits *= normal_random(1, 0.001) * 0.05*sin(2 * M_PI * month / 12)+1;
+                double after_dd = bank_data.demand_deposits;
                 cout << "Demand deposits grew from $" << before_dd << " to $" << after_dd << " with a change of $"
                      << after_dd - before_dd << endl;
 
-                float before_req = bank_data.required_reserves;
+                double before_req = bank_data.required_reserves;
                 bank_data.required_reserves = market_data.reserve_ratio * bank_data.demand_deposits;
-                float after_req = bank_data.required_reserves;
-                float before_ex = bank_data.excess_reserves;
+                double after_req = bank_data.required_reserves;
+                double before_ex = bank_data.excess_reserves;
                 // Update bond coupons and principals
                 bank_data.excess_reserves += market_data.bonds.get_earnings();
                 bank_data.excess_reserves += (after_dd - before_dd) - (after_req - before_req);
@@ -229,7 +235,7 @@ int main() {
                 for (auto &item: bank_data.taken_loans)
                     bank_data.excess_reserves -= item.get_payment();
 
-                float after_ex = bank_data.excess_reserves;
+                double after_ex = bank_data.excess_reserves;
 
                 cout << "Excess reserves changed from $" << before_ex << " to $" << after_ex << " with a change of $"
                      << after_ex - before_ex << endl;

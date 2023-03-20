@@ -11,19 +11,19 @@ class Bonds {
 public:
     Bonds() = default;
 
-    bool new_bond(int duration_months, float amount, float yearly_rate) {
+    bool new_bond(int duration_months, double amount, double yearly_rate) {
         if (!is_accepted_duration(duration_months))
             return false;
-        std::vector<float> info = {(float) duration_months, amount, yearly_rate, (float) month};
+        std::vector<double> info = {(double) duration_months, amount, yearly_rate, (double) month};
         bond_data.push_back(info);
         return true;
     }
 
-    float sell_bond(int i, float current_rate) {
+    double sell_bond(int i, double current_rate) {
         if (bond_data[i][1] == 0 && bond_data[i][2] == 0) {
             return 0;
         }
-        float value_sold = bond_data[i][2] / current_rate * bond_data[i][1];
+        double value_sold = bond_data[i][2] / current_rate * bond_data[i][1];
         bond_data[i][1] = 0;
         bond_data[i][2] = 0;
         return value_sold;
@@ -44,12 +44,12 @@ public:
         return ret_str;
     }
 
-    float get_earnings() {
+    double get_earnings() {
         month++;
-        float earnings = 0;
+        double earnings = 0;
         for (auto &item: bond_data) {
             earnings += item[2] / 12 * item[1];
-            if ((float) month == item[3] + item[0]) {
+            if ((double) month == item[3] + item[0]) {
                 earnings += item[1];
                 item[1] = 0;
                 item[2] = 0;
@@ -76,12 +76,12 @@ public:
         return false;
     }
 
-    std::vector<float> get_bond(int i) {
+    std::vector<double> get_bond(int i) {
         return bond_data[i];
     }
 
     std::vector<int> acceptedDurations = {4, 12, 24, 60, 84, 120, 240, 360};
-    std::vector<std::vector<float>> bond_data;
+    std::vector<std::vector<double>> bond_data;
 private:
     int month = 0;
 };
