@@ -84,6 +84,9 @@ bool analyze_investments() {
     cout << "Investments generally have higher yields, but are riskier compared to treasuries." << endl
          << "As your bank grows, it will have access to better and better investments." << endl;
 
+    cout << "Excess reserves: $" << bank_data.excess_reserves << endl;
+
+
     cout << market_data.investments.get_options();
 
     cout << "Option #";
@@ -100,13 +103,13 @@ bool analyze_investments() {
         cout << "You have insufficient funds to take this investment." << endl;
         return false;
     }
+    bank_data.excess_reserves -= chosen_investment.principal;
 
     if (!chosen_investment.investment_succeeded()) {
         cout << "Investment failed. You have lost your principal." << endl;
         return true;
     }
 
-    bank_data.excess_reserves -= chosen_investment.principal;
     bank_data.taken_investments.push_back(chosen_investment);
     return true;
 }
@@ -146,16 +149,16 @@ bool marketing() {
 bool take_loan() {
     cout << LINE << "Take a Loan: " << LINE;
 
+    cout << "Excess reserves: $" << bank_data.excess_reserves << endl;
     cout << "Amount to loan: $";
     float loan_amount;
     cin >> loan_amount;
     cout << endl;
 
-    cout << "Excess reserves: $" << bank_data.excess_reserves << endl;
-
 
     cout << "Loan options:" << endl;
-    market_data.loans.update_loans(loan_amount, bank_data.excess_reserves, bank_data.demand_deposits, bank_data.demand_deposits_growth_rate);
+    market_data.loans.update_loans(loan_amount, bank_data.excess_reserves, bank_data.demand_deposits,
+                                   bank_data.demand_deposits_growth_rate);
     cout << market_data.loans.list_loans();
 
     cout << "Option #";
@@ -163,7 +166,7 @@ bool take_loan() {
     cin >> selection;
     cout << endl;
 
-    if(selection < 0 || selection >= market_data.loans.available_loans.size()){
+    if (selection < 0 || selection >= market_data.loans.available_loans.size()) {
         cout << "Invalid selection specified." << endl;
         return false;
     }
@@ -223,7 +226,7 @@ int main() {
                     bank_data.excess_reserves += item.return_per_month;
 
                 // Loans
-                for (auto& item: bank_data.taken_loans)
+                for (auto &item: bank_data.taken_loans)
                     bank_data.excess_reserves -= item.get_payment();
 
                 float after_ex = bank_data.excess_reserves;

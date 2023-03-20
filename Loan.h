@@ -11,7 +11,7 @@ public:
     Loan(float amount, int duration_months, float yearly_interest) {
         this->amount = amount;
         this->yearly_interest = yearly_interest;
-        monthly_payment = (float)amount / (float)duration_months + (float)amount * yearly_interest / 12;
+        monthly_payment = (float) amount / (float) duration_months + (float) amount * yearly_interest / 12;
         duration_months_left = duration_months;
         total_months = duration_months;
     }
@@ -24,12 +24,12 @@ public:
         return monthly_payment;
     }
 
-    [[nodiscard]] std::string loan_info() const{
-        return std::to_string(total_months)+" month loan at "+std::to_string(yearly_interest*100)+"% interest";
+    [[nodiscard]] std::string loan_info() const {
+        return std::to_string(total_months) + " month loan at " + std::to_string(yearly_interest * 100) + "% interest for $"+std::to_string(monthly_payment)+" per month.";
     }
 
-    [[nodiscard]] std::string bought_info() const{
-        return loan_info()+"; "+ std::to_string(duration_months_left)+" months left";
+    [[nodiscard]] std::string bought_info() const {
+        return loan_info() + "; " + std::to_string(duration_months_left) + " months left";
     }
 
     float amount;
@@ -41,11 +41,13 @@ public:
 
 class LoanGen {
 public:
-    void update_loans(float amount_wanted, float excess_reserves, float demand_deposits, float demand_deposits_growth_rate) {
+    void
+    update_loans(float amount_wanted, float excess_reserves, float demand_deposits, float demand_deposits_growth_rate) {
         available_loans.clear();
-        for(int i=0;i<5;i++){
-            available_loans.emplace_back(amount_wanted, (int)random(6, 12*7), loan_rate_func(excess_reserves, demand_deposits, demand_deposits_growth_rate)-
-                                                                              normal_random(0.1, 0.05));
+        for (int i = 0; i < 5; i++) {
+            available_loans.emplace_back(amount_wanted, (int) random(6, 12 * 7),
+                                         loan_rate_func(excess_reserves, demand_deposits, demand_deposits_growth_rate) -
+                                         normal_random(0.1, 0.02));
         }
     }
 
@@ -53,8 +55,8 @@ public:
         std::string ret_str;
         int i = 0;
         for (auto &item: available_loans) {
-            if(item.monthly_payment != 0)
-                ret_str += std::to_string(i)+"> "+item.loan_info()+"\n";
+            if (item.monthly_payment != 0)
+                ret_str += std::to_string(i) + "> " + item.loan_info() + "\n";
             i++;
         }
         return ret_str;
